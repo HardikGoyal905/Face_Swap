@@ -1,5 +1,7 @@
 # Face Swap
 
+A face swapping tool, to swap the face in a video with the face in a photo.
+
 ----
 
 #### Input --> The photos are stored in the “photos” folder and the videos are stored in the “videos” folder in the same directory of the code.
