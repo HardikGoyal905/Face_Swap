@@ -5,17 +5,19 @@ import dlib
 import numpy as np
 from glob import glob
 
-# swapped_face = "ayush.jpg"
-#
-# src = "height2"
+photos = glob("photos/*") # returns a list of locations of the photos in the photos folder
+videos = glob("videos/*")
+result = "result"
+landmark_prediction_model="/gdrive/MyDrive/cs299/face swap/shape_predictor_68_face_landmarks.dat"
 
-detector = dlib.get_frontal_face_detector()
+trash = "trash" # This is acting as the location of a trash folder which we will be using and then deleting in this project NOTE: CHANGE THE NAME OF IT, IF YOU HAVE AN ANOTHER FOLDER NAMED TRASH IN THE DIRECTORY
 
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+detector = dlib.get_frontal_face_detector() # detector is the function which will detect the face
+predictor = dlib.shape_predictor(landmark_prediction_model) # this function will predict the landmark points on the face, and the argument of shape_predictor is the 
 
 
 def main(img, img2, landmark_pts, triangle_index):
-
+    ### Doing the same process for the frame image as done with the photo ###
     faces2 = detector(img2)
 
     landmark_pts2 = []
@@ -33,29 +35,29 @@ def main(img, img2, landmark_pts, triangle_index):
 
     hull2 = cv2.convexHull(pts2)
 
+    # finding center of the face in the frame
     rectt = cv2.boundingRect(pts2)
-
     (xx, yy, ww, hh) = rectt
-
     center2 =(int((xx + xx + ww) / 2), int((yy + yy +hh) / 2))
 
     new_face = np.zeros_like(img2)
 
+    ### finding the triangle in the frame corresponding to the triangle in the photo in terms of index of landmark points ###
+
     for t in triangle_index:
+        # for each triangle in the photo
+
+        # taking out each coordinate of triangle
         tr1_pt1 = landmark_pts[t[0]]
         tr1_pt2 = landmark_pts[t[1]]
         tr1_pt3 = landmark_pts[t[2]]
 
         t1_pts = np.array([tr1_pt1, tr1_pt2, tr1_pt3], np.int32)
 
-        rect = cv2.boundingRect(t1_pts)
+        rect = cv2.boundingRect(t1_pts) # rectangle enclosing that triangle
         (x, y, w, h) = rect
 
-        # cv2.line(img, tr1_pt1, tr1_pt2, (0, 0, 255), 1)
-        # cv2.line(img, tr1_pt2, tr1_pt3, (0, 0, 255), 1)
-        # cv2.line(img, tr1_pt3, tr1_pt1, (0, 0, 255), 1)
-
-        cropped = img[y: y+h, x: x+w]
+        cropped = img[y: y+h, x: x+w] # cropping that rectangle
 
         mask = np.zeros_like(cropped)
 
@@ -63,10 +65,10 @@ def main(img, img2, landmark_pts, triangle_index):
                                 [tr1_pt2[0]-x, tr1_pt2[1]-y],
                                 [tr1_pt3[0]-x, tr1_pt3[1]-y]], np.int32)
 
-        cv2.fillConvexPoly(mask, cropped_pts, (255, 255, 255))
+        cv2.fillConvexPoly(mask, cropped_pts, (255, 255, 255)) # mask for extracting that triangle
 
 
-        #Image 2
+        # For the corresponding triangle in the frame
         tr2_pt1 = landmark_pts2[t[0]]
         tr2_pt2 = landmark_pts2[t[1]]
         tr2_pt3 = landmark_pts2[t[2]]
@@ -77,10 +79,6 @@ def main(img, img2, landmark_pts, triangle_index):
 
         (x2, y2, w2, h2) = rect2
 
-        # cv2.line(img2, tr2_pt1, tr2_pt2, (255, 0, 0), 1)
-        # cv2.line(img2, tr2_pt2, tr2_pt3, (255, 0, 0), 1)
-        # cv2.line(img2, tr2_pt3, tr2_pt1, (255, 0, 0), 1)
-
         cropped2 = img2[y2: y2+h2, x2: x2+w2]
 
         mask2 = np.zeros_like(cropped2)
@@ -89,57 +87,64 @@ def main(img, img2, landmark_pts, triangle_index):
                                 [tr2_pt2[0]-x2, tr2_pt2[1]-y2],
                                 [tr2_pt3[0]-x2, tr2_pt3[1]-y2]], np.int32)
 
-        cv2.fillConvexPoly(mask2, cropped2_pts, (255, 255, 255))
+        cv2.fillConvexPoly(mask2, cropped2_pts, (255, 255, 255)) # mask for extracting that triangle
 
-        # Warped Triangle
+        ### Warped the triangle in the photo to the size of the corresponding triangle in the frame ###
 
         cropped_pts = np.float32(cropped_pts)
         cropped2_pts = np.float32(cropped2_pts)
 
-        M = cv2.getAffineTransform(cropped_pts, cropped2_pts)
+        M = cv2.getAffineTransform(cropped_pts, cropped2_pts) # returns a transformation matrix (M) for warping
 
-        t_warped = cv2.warpAffine(cropped, M, (w2, h2))
+        t_warped = cv2.warpAffine(cropped, M, (w2, h2)) # warping the triangle
 
-        t_warped = cv2.bitwise_and(t_warped, mask2)
+        t_warped = cv2.bitwise_and(t_warped, mask2) # Extracting the warped triangle
+
+        ### Putting the warped triangular piece to make the new face ###
 
         triangle_area = new_face[y2: y2 + h2, x2: x2 + w2]
 
+        """Due to slight deformities in the coordinates of the warped triangle, might arise between the operations, the triangles would be overlapping on each other.
+        However this deformity is very small, but it would be visible to naked eyes when the final face would be created.
+        So its better to cut out the overlapped region."""
+        # Cutting out that overlap
         triangle_area_gray = cv2.cvtColor(triangle_area, cv2.COLOR_BGR2GRAY)
-
         _, triangle_mask = cv2.threshold(triangle_area_gray, 1, 255, cv2.THRESH_BINARY_INV)
-
         t_warped = cv2.bitwise_and(t_warped, t_warped, mask=triangle_mask)
 
+        # adding the new triangle in the new face
         triangle_area = cv2.add(triangle_area, t_warped)
-
         new_face[y2: y2 + h2, x2: x2 + w2] = triangle_area
 
+    #Making different masks
     new_face_gray = cv2.cvtColor(new_face, cv2.COLOR_BGR2GRAY)
-
     _, mask2 = cv2.threshold(new_face_gray, 1, 255, cv2.THRESH_BINARY_INV)
-
     ret, background = cv2.threshold(new_face_gray, 1, 255, cv2.THRESH_BINARY)
 
+    # Making the final photo by inserting the new face on the old face of the frame
     no_face = cv2.bitwise_and(img2, img2, mask=mask2)
-
     resulting = cv2.add(new_face, no_face)
 
+    # seamless cloning to give the final touch, so that the final image will look like original in context of skin tone, and other quality effects
     seamlessclone = cv2.seamlessClone(resulting, img2, background, center2, cv2.NORMAL_CLONE)
 
     return seamlessclone
 
 
 if __name__ == "__main__":
-    photos = glob("photos/*")
+    for photo in photos: # iterating through each photo
 
-    for photo in photos:
-        swapped_face = photo.split('/')[-1]
+        ### reading the photo ###
 
-        img = cv2.imread(f"photos/{swapped_face}")
+        swapped_face = photo.split('/')[-1] # name of the photo
 
-        faces = detector(img)
+        img = cv2.imread(photo) # reading the photo
 
-        landmark_pts = []
+        ### detecting the image in the photo and store the landmark points ###
+
+        faces = detector(img) # detect the faces in the image
+
+        landmark_pts = [] 
 
         triangle_index = []
 
@@ -150,12 +155,13 @@ if __name__ == "__main__":
                 x = landmark.part(n).x
                 y = landmark.part(n).y
 
-                landmark_pts.append((x, y))
+                landmark_pts.append((x, y)) # storing the coordinates of landmark points (68 points in total)
 
-            pts = np.array(landmark_pts)
+            pts = np.array(landmark_pts) # converting to np array, which suits perfectly for open-cv library
 
-            hull = cv2.convexHull(pts)
-            # cv2.polylines(img, [hull], True, (255, 0, 0), 3)
+            ### getting out delaunay triangles in the photo ###
+
+            hull = cv2.convexHull(pts) # finding the convex hull of those points
 
             mask = np.zeros_like(img)
 
@@ -163,20 +169,24 @@ if __name__ == "__main__":
 
             final_img = cv2.bitwise_and(img, mask)
 
-            rect = cv2.boundingRect(hull)
+            rect = cv2.boundingRect(hull) # rectangle which is enclosing the face
 
-            subdiv = cv2.Subdiv2D(rect)
+            subdiv = cv2.Subdiv2D(rect) # this is the plane which will be divided into triangles
 
-            subdiv.insert(landmark_pts)
+            subdiv.insert(landmark_pts) # divided into triangles, with vertices as landmark points
 
-            triangles = subdiv.getTriangleList()
+            triangles = subdiv.getTriangleList() # returns the list, each element representing the the coordinates of a triangle
             triangles = np.array(triangles, dtype= int)
 
-            for t in triangles:
+            ### storing the triangles in the index form, where the index is the index of the landmark point ###
+            for t in triangles: # t is the list of coordinates of the delaunay triangle
+                ### working on each triangle ###
+                # pti denotes the coordinates of ith point of triangle
                 pt1 = (t[0], t[1])
                 pt2 = (t[2], t[3])
                 pt3 = (t[4], t[5])
 
+                # finding out which index of the landmark point is that coordinate of triangle points
                 i1 = np.where((pts == pt1).all(axis=1))
                 i2 = np.where((pts == pt2).all(axis=1))
                 i3 = np.where((pts == pt3).all(axis=1))
@@ -195,49 +205,53 @@ if __name__ == "__main__":
                     ind3 = n
 
                 if ind1 is not None and ind2 is not None and ind3 is not None:
-                    triangle_index.append((ind1, ind2, ind3))
+                    triangle_index.append((ind1, ind2, ind3)) #triangle_index is the list, with each element being a tuple, whose each element represents which index of the landmark points does this triangular point resembles
 
-            # cv2.imshow("Delaunay Triangulation", img)
-
-        videos = glob("videos/*")
+            break # as we want only one face to swap on a video
 
         for video in videos:
+            ### reading the video, the video should be mp4 ###
             src = video.split('/')[-1].split('.')[0]
 
-            cap = cv2.VideoCapture(f"videos/{src}.mp4")
+            cap = cv2.VideoCapture(video)
+            # dimensions of the video
             w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             size = (int(w), int(h))
 
-            result_path = "trash"
+            # making the folder trash and temporarily using as our output folder for now
+            if not os.path.exists(trash):
+                os.makedirs(trash)
 
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
-
-            path = os.path.join(result_path, f'{swapped_face.split(".")[0]}_{src}.avi')
-
+            path = os.path.join(trash, f'{swapped_face.split(".")[0]}_{src}.avi') # path of resulting video
+            # initialising the video writer which will write the final video with 'DIVX' as our video codec
             out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'DIVX'), cap.get(cv2.CAP_PROP_FPS), size)
 
             while True:
+                ### working on each frame ###
                 ret, frame = cap.read()
 
                 if not ret:
                     cap.release()
                     break
 
-                result = main(img, frame, landmark_pts, triangle_index)
+                result_frame = main(img, frame, landmark_pts, triangle_index)
 
-                out.write(result)
+                out.write(result_frame)
 
             out.release()
 
-            clip = VideoFileClip(f'trash/{swapped_face.split(".")[0]}_{src}.avi')
+            ### Adding original sound in our face swapped video ###
+            clip = VideoFileClip(f'{trash}/{swapped_face.split(".")[0]}_{src}.avi')
 
-            clip2 = VideoFileClip(f'videos/{src}.mp4')
+            clip2 = VideoFileClip(video)
 
             clip.audio = clip2.audio
 
-            if not os.path.exists('result'):
-                os.makedirs('result')
+            ### Writing the final video in the 'result' folder
+            if not os.path.exists(result):
+                os.makedirs(result)
+            clip.write_videofile(f'{result}/{src}_{swapped_face.split(".")[0]}.mp4')
 
-            clip.write_videofile(f'result/{src}_{swapped_face.split(".")[0]}.mp4')
+    os.remove(f'{trash}/{swapped_face.split(".")[0]}_{src}.avi')
+    os.rmdir(trash)
