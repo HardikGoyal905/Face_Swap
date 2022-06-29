@@ -30,6 +30,8 @@ def main(img, img2, landmark_pts, triangle_index):
             y = landmark2.part(n).y
 
             landmark_pts2.append((x, y))
+    
+        break
 
     pts2 = np.array(landmark_pts2)
 
@@ -136,7 +138,7 @@ if __name__ == "__main__":
 
         ### reading the photo ###
 
-        swapped_face = photo.split('/')[-1] # name of the photo
+        photo_name = photo.split('/')[-1].split('.')[0] # name of the photo
 
         img = cv2.imread(photo) # reading the photo
 
@@ -211,7 +213,7 @@ if __name__ == "__main__":
 
         for video in videos:
             ### reading the video, the video should be mp4 ###
-            src = video.split('/')[-1].split('.')[0]
+            video_name = video.split('/')[-1].split('.')[0]
 
             cap = cv2.VideoCapture(video)
             # dimensions of the video
@@ -223,7 +225,7 @@ if __name__ == "__main__":
             if not os.path.exists(trash):
                 os.makedirs(trash)
 
-            path = os.path.join(trash, f'{swapped_face.split(".")[0]}_{src}.avi') # path of resulting video
+            path = os.path.join(trash, f'{video_name}_{photo_name}.avi') # path of resulting video
             # initialising the video writer which will write the final video with 'DIVX' as our video codec
             out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'DIVX'), cap.get(cv2.CAP_PROP_FPS), size)
 
@@ -242,7 +244,7 @@ if __name__ == "__main__":
             out.release()
 
             ### Adding original sound in our face swapped video ###
-            clip = VideoFileClip(f'{trash}/{swapped_face.split(".")[0]}_{src}.avi')
+            clip = VideoFileClip(f'{trash}/{video_name}_{photo_name}.avi')
 
             clip2 = VideoFileClip(video)
 
@@ -251,7 +253,7 @@ if __name__ == "__main__":
             ### Writing the final video in the 'result' folder
             if not os.path.exists(result):
                 os.makedirs(result)
-            clip.write_videofile(f'{result}/{src}_{swapped_face.split(".")[0]}.mp4')
+            clip.write_videofile(f'{result}/{video_name}_{photo_name}.mp4')
 
-    os.remove(f'{trash}/{swapped_face.split(".")[0]}_{src}.avi')
+    os.remove(f'{trash}/{video_name}_{photo_name}.avi')
     os.rmdir(trash)
