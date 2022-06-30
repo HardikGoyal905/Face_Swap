@@ -1,5 +1,6 @@
 # Face Swap
 A face swapping tool, to swap the face in a video with the face in a photo. A folder of photos, where each photo swaps over the folder of videos, outputs the face swapped videos.
+If you are a developer, you are encouraged to go through the code.
 
 [Google Colab](https://colab.research.google.com/drive/1YA_bHKExdEzaCjAAPVyeVfM09pX5PntP?usp=sharing)
 
