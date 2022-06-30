@@ -19,3 +19,9 @@ A face swapping tool, to swap the face in a video with the face in a photo. A fo
 After the code is executed, the result folder will be created in the same directory, containing a bunch of face swapped videos, made by the swapping of the face in each video, with the face in each photo. If we have used 4 photos and 3 videos, the "result" folder will contain 4*3, i.e., 12 face swapped videos.
 
 ## Some Results
+#### Video
+https://user-images.githubusercontent.com/75153467/176688080-03ca71a8-c99b-473e-ae48-b018930bd3e1.mp4
+#### Photo
+![Salman](https://user-images.githubusercontent.com/75153467/176688380-7c1495dd-13de-4048-a93b-5e05f974575c.jpeg)
+#### Face Swapped Result
+https://user-images.githubusercontent.com/75153467/176688421-54192f83-bf54-48fb-bcd9-0594752e3f4b.mp4
