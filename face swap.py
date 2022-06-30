@@ -8,7 +8,7 @@ from glob import glob
 photos = glob("photos/*") # returns a list of locations of the photos in the photos folder
 videos = glob("videos/*")
 result = "result"
-landmark_prediction_model="/gdrive/MyDrive/cs299/face swap/shape_predictor_68_face_landmarks.dat"
+landmark_prediction_model="shape_predictor_68_face_landmarks.dat"
 
 trash = "trash" # This is acting as the location of a trash folder which we will be using and then deleting in this project NOTE: CHANGE THE NAME OF IT, IF YOU HAVE AN ANOTHER FOLDER NAMED TRASH IN THE DIRECTORY
 
