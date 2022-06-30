@@ -21,3 +21,5 @@ A face swapping tool, to swap the face in a video with the face in a photo. A fo
 ----
 After the code is executed, the result folder will be created in the same directory, containing a bunch of face swapped videos, made by the swapping of the face in each video, with the face in each photo. If we have used 4 photos and 3 videos, the "result" folder will contain 4*3, i.e., 12 face swapped videos.
 
+## Some Results
+----
