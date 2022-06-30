@@ -15,6 +15,13 @@ trash = "trash" # This is acting as the location of a trash folder which we will
 detector = dlib.get_frontal_face_detector() # detector is the function which will detect the face
 predictor = dlib.shape_predictor(landmark_prediction_model) # this function will predict the landmark points on the face, and the argument of shape_predictor is the 
 
+# making the folder trash and temporarily using as our output folder for now
+if not os.path.exists(trash):
+    os.makedirs(trash)
+
+if not os.path.exists(result):
+    os.makedirs(result)
+
 
 def main(img, img2, landmark_pts, triangle_index):
     ### Doing the same process for the frame image as done with the photo ###
@@ -138,7 +145,7 @@ if __name__ == "__main__":
 
         ### reading the photo ###
 
-        photo_name = photo.split('/')[-1].split('.')[0] # name of the photo
+        photo_name = os.path.basename(photo).split('.')[0] # name of the photo
 
         img = cv2.imread(photo) # reading the photo
 
@@ -213,17 +220,13 @@ if __name__ == "__main__":
 
         for video in videos:
             ### reading the video, the video should be mp4 ###
-            video_name = video.split('/')[-1].split('.')[0]
+            video_name = os.path.basename(video).split('.')[0]
 
             cap = cv2.VideoCapture(video)
             # dimensions of the video
             w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             size = (int(w), int(h))
-
-            # making the folder trash and temporarily using as our output folder for now
-            if not os.path.exists(trash):
-                os.makedirs(trash)
 
             path = os.path.join(trash, f'{video_name}_{photo_name}.avi') # path of resulting video
             # initialising the video writer which will write the final video with 'DIVX' as our video codec
@@ -244,16 +247,16 @@ if __name__ == "__main__":
             out.release()
 
             ### Adding original sound in our face swapped video ###
-            clip = VideoFileClip(f'{trash}/{video_name}_{photo_name}.avi')
+            clip = VideoFileClip(path)
 
             clip2 = VideoFileClip(video)
 
             clip.audio = clip2.audio
 
             ### Writing the final video in the 'result' folder
-            if not os.path.exists(result):
-                os.makedirs(result)
-            clip.write_videofile(f'{result}/{video_name}_{photo_name}.mp4')
+            clip.write_videofile(os.path.join(result, f'{video_name}_{photo_name}.mp4'))
 
-    os.remove(f'{trash}/{video_name}_{photo_name}.avi')
-    os.rmdir(trash)
+            os.remove(path)
+
+    if os.path.exists(trash):
+        os.rmdir(trash)
