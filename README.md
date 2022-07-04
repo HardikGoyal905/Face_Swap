@@ -23,8 +23,10 @@ After the code is executed, the result folder will be created in the same direct
 
 ## Some Results
 #### Video
-https://user-images.githubusercontent.com/75153467/176688080-03ca71a8-c99b-473e-ae48-b018930bd3e1.mp4
+https://user-images.githubusercontent.com/75153467/177191306-5b5efeee-23d9-438d-9381-7ce733eba403.mp4
 #### Photo
-![Salman](https://user-images.githubusercontent.com/75153467/176688380-7c1495dd-13de-4048-a93b-5e05f974575c.jpeg)
+![photo](https://user-images.githubusercontent.com/75153467/177191331-291eb75d-9a6b-41f9-9dd8-4734d0751c7e.jpeg)
 #### Face Swapped Result
-https://user-images.githubusercontent.com/75153467/176688421-54192f83-bf54-48fb-bcd9-0594752e3f4b.mp4
+https://user-images.githubusercontent.com/75153467/177191367-2dd4b658-9384-462f-91a1-97534a3b8922.mp4
+
+
